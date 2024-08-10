@@ -75,20 +75,26 @@ app.get('/dealltable', async (req, res) => {
 
 
 
-client.connect().then(async() => {
+client.connect().then(async () => {
+  console.log("Connected to the database");
 
+  try {
+    await client.query(`
+      ALTER TABLE groupsmonths
+      DROP CONSTRAINT IF EXISTS groupsmonths_g_id_fkey;
 
- // await client.query("DELETE FROM lectureinmonths; DELETE FROM joiningmonth; DELETE FROM groupsmonths; DELETE FROM lectureofmonths; DELETE FROM months;")
-  await client.query(`
- ALTER TABLE groupsmonths
-DROP CONSTRAINT IF EXISTS groupsmonths_g_id_fkey;
+      ALTER TABLE groupsmonths
+      ADD CONSTRAINT groupsmonths_g_id_fkey
+      FOREIGN KEY (g_id) REFERENCES groups (id) ON DELETE CASCADE;
+    `);
+    console.log("Constraints updated successfully");
+  } catch (err) {
+    console.error("Error running query:", err.message);
+  }
 
-ALTER TABLE groupsmonths
-ADD CONSTRAINT groupsmonths_g_id_fkey
-FOREIGN KEY (g_id) REFERENCES groups (id) ON DELETE CASCADE;
-  `)
-  console.log();
-  console.log("psql is connected ..");
-  app.listen(port, () => console.log(`server run on port ${port} ...... `));
+  app.listen(port, () => console.log(`Server running on port ${port}`));
   await isReady();
+}).catch(err => {
+  console.error("Failed to connect to the database:", err.message);
 });
+
